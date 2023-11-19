@@ -46,7 +46,7 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
                 .apnsPush(
                     configuration: .init(
                         authenticationMethod: .jwt(
-                            privateKey: .loadFrom(string: privateKey),
+                            privateKey: .loadFrom(string: privateKey), // try .init(pemRepresentation: privateP8Key)
                             keyIdentifier: keyId,
                             teamIdentifier: teamId),
                         environment: env == "production" ? .production : .sandbox

@@ -7,7 +7,7 @@
 
 import FeatherService
 import FeatherPush
-@preconcurrency import APNS
+import APNS
 import Foundation
 
 extension Platform {
@@ -27,7 +27,6 @@ extension Platform {
 struct APNSPushService {
 
     let config: ServiceConfig
-    let client: APNSClient<JSONDecoder, JSONEncoder>
 
     subscript<T>(
         dynamicMember keyPath: KeyPath<APNSPushServiceContext, T>
@@ -36,9 +35,8 @@ struct APNSPushService {
         return context[keyPath: keyPath]
     }
 
-    init(config: ServiceConfig, client: APNSClient<JSONDecoder, JSONEncoder>) {
+    init(config: ServiceConfig) {
         self.config = config
-        self.client = client
     }
 }
 
@@ -52,6 +50,13 @@ extension APNSPushService: PushService {
         guard !recipients.isEmpty else {
             return
         }
+        
+        let client = APNSClient<JSONDecoder, JSONEncoder>(
+            configuration: self.configuration,
+            eventLoopGroupProvider: self.eventLoopGroupProvider,
+            responseDecoder: self.responseDecoder,
+            requestEncoder: self.requestEncoder
+        )
         for recipient in recipients {
             _ = try? await client.sendAlertNotification(
                 .init(
@@ -78,5 +83,7 @@ extension APNSPushService: PushService {
                 deviceToken: recipient.token
             )
         }
+        
+        try client.syncShutdown()
     }
 }
