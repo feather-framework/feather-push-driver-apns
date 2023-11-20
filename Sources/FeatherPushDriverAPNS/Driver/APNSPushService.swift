@@ -15,7 +15,7 @@ extension Platform {
     // TODO: macOS, tvOS, watchOS support?
     var isAPNSCompatible: Bool {
         switch self {
-        case .ios:
+        case .iOS, .macOS, .tvOS, .watchOS, .visionOS, .safari:
             return true
         default:
             return false
@@ -50,7 +50,7 @@ extension APNSPushService: PushService {
         guard !recipients.isEmpty else {
             return
         }
-        
+
         let client = APNSClient<JSONDecoder, JSONEncoder>(
             configuration: self.configuration,
             eventLoopGroupProvider: self.eventLoopGroupProvider,
@@ -68,7 +68,7 @@ extension APNSPushService: PushService {
                     ),
                     expiration: .immediately,
                     priority: .immediately,
-                    topic: "general", // TODO: use proper topic / bundle id
+                    topic: "general",  // TODO: use proper topic / bundle id
                     payload: notification.userInfo,
                     badge: nil,
                     sound: nil,
@@ -83,7 +83,7 @@ extension APNSPushService: PushService {
                 deviceToken: recipient.token
             )
         }
-        
+
         try client.syncShutdown()
     }
 }

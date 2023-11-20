@@ -10,7 +10,21 @@ import NIO
 import APNS
 import FeatherService
 
-struct APNSPushServiceContext: ServiceContext {
+public struct APNSPushServiceContext: ServiceContext {
+    
+    public init(
+        configuration: APNSClientConfiguration,
+        eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
+        responseDecoder: JSONDecoder = .init(),
+        requestEncoder: JSONEncoder = .init(),
+        byteBufferAllocator: ByteBufferAllocator = .init()
+    ) {
+        self.configuration = configuration
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        self.responseDecoder = responseDecoder
+        self.requestEncoder = requestEncoder
+        self.byteBufferAllocator = byteBufferAllocator
+    }
 
     let configuration: APNSClientConfiguration
     let eventLoopGroupProvider: NIOEventLoopGroupProvider
@@ -18,7 +32,7 @@ struct APNSPushServiceContext: ServiceContext {
     let requestEncoder: JSONEncoder
     let byteBufferAllocator: ByteBufferAllocator
 
-    func createDriver() throws -> ServiceDriver {
+    public func createDriver() throws -> ServiceDriver {
         APNSPushServiceDriver(context: self)
     }
 
