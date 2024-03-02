@@ -1,11 +1,11 @@
 //
-//  APNSPushService.swift
+//  APNSPushComponent.swift
 //  FeatherPushDriverAPNS
 //
 //  Created by Tibor Bodecs on 2020. 04. 28..
 //
 
-import FeatherService
+import FeatherComponent
 import FeatherPush
 import APNS
 import Foundation
@@ -24,23 +24,23 @@ extension Platform {
 }
 
 @dynamicMemberLookup
-struct APNSPushService {
+struct APNSPushComponent {
 
-    let config: ServiceConfig
+    let config: ComponentConfig
 
     subscript<T>(
-        dynamicMember keyPath: KeyPath<APNSPushServiceContext, T>
+        dynamicMember keyPath: KeyPath<APNSPushComponentContext, T>
     ) -> T {
-        let context = config.context as! APNSPushServiceContext
+        let context = config.context as! APNSPushComponentContext
         return context[keyPath: keyPath]
     }
 
-    init(config: ServiceConfig) {
+    init(config: ComponentConfig) {
         self.config = config
     }
 }
 
-extension APNSPushService: PushService {
+extension APNSPushComponent: PushComponent {
 
     func send(
         notification: FeatherPush.Notification,

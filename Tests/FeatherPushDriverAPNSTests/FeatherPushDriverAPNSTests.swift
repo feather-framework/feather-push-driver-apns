@@ -9,7 +9,7 @@ import NIO
 import Logging
 import Foundation
 import XCTest
-import FeatherService
+import FeatherComponent
 import FeatherPush
 import FeatherPushDriverAPNS
 import XCTFeatherPush
@@ -41,7 +41,7 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         do {
-            let registry = ServiceRegistry()
+            let registry = ComponentRegistry()
 
             //            let appBundleID = "com.your.app.bundle.id"
             //            let privateP8Key = """
@@ -52,8 +52,8 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
             //            let keyIdentifier = "add your key identifier here"
             //            let teamIdentifier = "add your team identifier here"
 
-            try await registry.add(
-                APNSPushServiceContext(
+            try await registry.addPush(
+                APNSPushComponentContext(
                     configuration: .init(
                         authenticationMethod: .jwt(
                             privateKey: try! .loadFrom(string: self.privateKey),  // try .init(pemRepresentation: privateP8Key)

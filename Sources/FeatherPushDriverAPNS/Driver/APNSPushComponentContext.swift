@@ -1,17 +1,24 @@
 //
-//  APNSPushServiceContext.swift
+//  APNSPushComponentContext.swift
 //  FeatherPushDriverAPNS
 //
 //  Created by Tibor Bodecs on 2020. 04. 28..
 //
 
+import FeatherComponent
 import Foundation
 import NIO
 import APNS
-import FeatherService
+import FeatherComponent
 
-public struct APNSPushServiceContext: ServiceContext {
-    
+public struct APNSPushComponentContext: ComponentContext {
+
+    let configuration: APNSClientConfiguration
+    let eventLoopGroupProvider: NIOEventLoopGroupProvider
+    let responseDecoder: JSONDecoder
+    let requestEncoder: JSONEncoder
+    let byteBufferAllocator: ByteBufferAllocator
+
     public init(
         configuration: APNSClientConfiguration,
         eventLoopGroupProvider: NIOEventLoopGroupProvider = .createNew,
@@ -26,14 +33,8 @@ public struct APNSPushServiceContext: ServiceContext {
         self.byteBufferAllocator = byteBufferAllocator
     }
 
-    let configuration: APNSClientConfiguration
-    let eventLoopGroupProvider: NIOEventLoopGroupProvider
-    let responseDecoder: JSONDecoder
-    let requestEncoder: JSONEncoder
-    let byteBufferAllocator: ByteBufferAllocator
-
-    public func createDriver() throws -> ServiceDriver {
-        APNSPushServiceDriver(context: self)
+    public func make() throws -> ComponentBuilder {
+        APNSPushComponentBuilder(context: self)
     }
 
 }
