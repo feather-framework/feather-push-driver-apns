@@ -9,7 +9,7 @@ import NIO
 import Logging
 import Foundation
 import XCTest
-import FeatherService
+import FeatherComponent
 import FeatherPush
 import FeatherPushDriverAPNS
 import XCTFeatherPush
@@ -20,19 +20,19 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
     var privateKey: String {
         ProcessInfo.processInfo.environment["APNS_PRIVATE_KEY"]!
     }
-    
+
     var keyId: String {
         ProcessInfo.processInfo.environment["APNS_KEY_ID"]!
     }
-    
+
     var teamId: String {
         ProcessInfo.processInfo.environment["APNS_TEAM_ID"]!
     }
-    
+
     var env: String {
         ProcessInfo.processInfo.environment["APNS_ENV"] ?? "sandbox"
     }
-    
+
     var token: String {
         ProcessInfo.processInfo.environment["APNS_TOKEN"]!
     }
@@ -41,29 +41,40 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         do {
-            let registry = ServiceRegistry()
-            try await registry.add(
-                .apnsPush(
+            let registry = ComponentRegistry()
+
+            //            let appBundleID = "com.your.app.bundle.id"
+            //            let privateP8Key = """
+            //                -----BEGIN PRIVATE KEY-----
+            //                #add your p8 private key here#
+            //                -----END PRIVATE KEY-----
+            //                """
+            //            let keyIdentifier = "add your key identifier here"
+            //            let teamIdentifier = "add your team identifier here"
+
+            try await registry.addPush(
+                APNSPushComponentContext(
                     configuration: .init(
                         authenticationMethod: .jwt(
-                            privateKey: .loadFrom(string: privateKey),
-                            keyIdentifier: keyId,
-                            teamIdentifier: teamId),
-                        environment: env == "production" ? .production : .sandbox
+                            privateKey: try! .loadFrom(string: self.privateKey),  // try .init(pemRepresentation: privateP8Key)
+                            keyIdentifier: self.keyId,
+                            teamIdentifier: self.teamId
+                        ),
+                        environment: self.env == "production"
+                            ? .production : .sandbox
                     ),
                     eventLoopGroupProvider: .shared(eventLoopGroup)
-                ),
-                as: .apnsPush
+                )
             )
-            
+
             try await registry.run()
-            let push = try await registry.get(.apnsPush) as! PushService
-            
+            let push = try await registry.push()
+
             do {
                 // TODO: enable push test suite
-//                let suite = PushTestSuite(push)
-//                try await suite.testAll()
-                
+                //                let suite = PushTestSuite(push)
+                //                try await suite.testAll()
+
                 let notification = Notification(
                     title: "Test push notification",
                     body: "Test body for the push notification",
@@ -75,14 +86,14 @@ final class FeatherPushDriverAPNSTests: XCTestCase {
 
                 let recipient = Recipient(
                     token: token,
-                    platform: .ios
+                    platform: .iOS
                 )
-                
+
                 try await push.send(
                     notification: notification,
                     to: [recipient]
                 )
-                
+
                 try await registry.shutdown()
             }
             catch {

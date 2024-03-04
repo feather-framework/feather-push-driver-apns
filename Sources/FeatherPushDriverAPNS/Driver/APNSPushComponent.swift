@@ -1,13 +1,13 @@
 //
-//  APNSPushService.swift
+//  APNSPushComponent.swift
 //  FeatherPushDriverAPNS
 //
 //  Created by Tibor Bodecs on 2020. 04. 28..
 //
 
-import FeatherService
+import FeatherComponent
 import FeatherPush
-@preconcurrency import APNS
+import APNS
 import Foundation
 
 extension Platform {
@@ -15,7 +15,7 @@ extension Platform {
     // TODO: macOS, tvOS, watchOS support?
     var isAPNSCompatible: Bool {
         switch self {
-        case .ios:
+        case .iOS, .macOS, .tvOS, .watchOS, .visionOS, .safari:
             return true
         default:
             return false
@@ -24,25 +24,23 @@ extension Platform {
 }
 
 @dynamicMemberLookup
-struct APNSPushService {
+struct APNSPushComponent {
 
-    let config: ServiceConfig
-    let client: APNSClient<JSONDecoder, JSONEncoder>
+    let config: ComponentConfig
 
     subscript<T>(
-        dynamicMember keyPath: KeyPath<APNSPushServiceContext, T>
+        dynamicMember keyPath: KeyPath<APNSPushComponentContext, T>
     ) -> T {
-        let context = config.context as! APNSPushServiceContext
+        let context = config.context as! APNSPushComponentContext
         return context[keyPath: keyPath]
     }
 
-    init(config: ServiceConfig, client: APNSClient<JSONDecoder, JSONEncoder>) {
+    init(config: ComponentConfig) {
         self.config = config
-        self.client = client
     }
 }
 
-extension APNSPushService: PushService {
+extension APNSPushComponent: PushComponent {
 
     func send(
         notification: FeatherPush.Notification,
@@ -52,6 +50,13 @@ extension APNSPushService: PushService {
         guard !recipients.isEmpty else {
             return
         }
+
+        let client = APNSClient<JSONDecoder, JSONEncoder>(
+            configuration: self.configuration,
+            eventLoopGroupProvider: self.eventLoopGroupProvider,
+            responseDecoder: self.responseDecoder,
+            requestEncoder: self.requestEncoder
+        )
         for recipient in recipients {
             _ = try? await client.sendAlertNotification(
                 .init(
@@ -63,7 +68,7 @@ extension APNSPushService: PushService {
                     ),
                     expiration: .immediately,
                     priority: .immediately,
-                    topic: "general", // TODO: use proper topic / bundle id
+                    topic: "general",  // TODO: use proper topic / bundle id
                     payload: notification.userInfo,
                     badge: nil,
                     sound: nil,
@@ -78,5 +83,7 @@ extension APNSPushService: PushService {
                 deviceToken: recipient.token
             )
         }
+
+        try client.syncShutdown()
     }
 }
